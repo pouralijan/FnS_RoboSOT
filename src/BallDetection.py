@@ -20,20 +20,30 @@ class BallDetection(object):
         self.vmx = 255
 
     def reset(self):
-        self.hmn = 0
-        self.smn = 197
-        self.vmn = 214
-        self.hmx = 179
-        self.smx = 218
-        self.vmx = 255
+        # Red
+        # self.hmn = 0
+        # self.smn = 197
+        # self.vmn = 214
+        # self.hmx = 179
+        # self.smx = 218
+        # self.vmx = 255
+        # min H = 95, min S = 130, min V = 132; max H = 106, max S = 179, max V = 169 # Blue
+        self.hmn = 95
+        self.smn = 130
+        self.vmn = 132
+        self.hmx = 106
+        self.smx = 179
+        self.vmx = 169
 
     def start(self):
-        x_coefficient = 0.25
-        y_coefficient = 0.25
+        x_coefficient = 1.0
+        y_coefficient = 1.0
+
         while True:
             ret, frame = self.cap.read()
+            frame = cv2.flip(frame, 1)
             height, width, channels = frame.shape
-            x_reference, y_reference = width/2, height
+            x_reference, y_reference = width / 2, height
 
             # # converting to HSV
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -61,26 +71,38 @@ class BallDetection(object):
                 for x, y, r in circles[0, :]:
                     xD = x - x_reference
                     yD = y - y_reference
+
                     xD *= x_coefficient
                     yD *= y_coefficient
+
                     radian = math.atan(xD / yD)
                     degree = float(radian * 180 / math.pi)
+
                     if degree < 0:
                         degree += 360
-                    distance = math.sqrt(math.pow(x, 2) + math.pow(y, 2))
-                    print("Degree:", degree, "Distance:", distance)
 
-                    if self._test:
-                        if r < 30:
+                    # This is not corrected :( # TODO: Fix me
+                    distance = math.sqrt(math.pow(xD, 2) + math.pow(yD, 2))
+
+                    if r:
+                        if self._test:
+                            cv2.line(frame, (int(x_reference), int(y_reference)), (x, y), (255, 0, 0), 2)
+                            cv2.putText(frame, "{}".format(int(degree)), (x, int(y - 20)),
+                                        cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                                        1.5, (0, 0, 255))
+
+                            cv2.putText(frame, "{}".format(int(distance)), (x, int(y + 60)),
+                                        cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                                        1.5, (0, 0, 255))
+                            if r < 30:
                                 cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
                                 cv2.circle(frame, (x, y), 1, (0, 255, 0), 5)
-                        elif r > 35:
+                            elif r > 35:
                                 cv2.circle(frame, (x, y), r, (0, 255, 255), 2)
                                 cv2.circle(frame, (x, y), 1, (0, 255, 255), 5)
                         else:
-                            if r:
-                                # Remove print and send x, y, r to MicroController ;)
-                                print("X: {}, Y: {}, R: {}".format(x, y, r))
+                            # Remove print and send x, y, r to MicroController ;)
+                            print("X: {}, Y: {}, R: {}, Degree: {}, Distance: {}".format(x, y, r, degree, distance))
 
             # Show the result in frames
             if self._test:
