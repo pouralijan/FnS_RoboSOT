@@ -2,13 +2,12 @@ import cv2
 import numpy
 from Calibre import Calibre
 
-# True only for test code ;)
-TEST = False
-
 
 class BallDetection(object):
-    def __init__(self):
+    def __init__(self, test=False):
         super(BallDetection, self).__init__()
+        # True only for test code ;)
+        self._test = test
         self.cap = cv2.VideoCapture(0)
         self.kernel = numpy.ones((5, 5), numpy.uint8)
 
@@ -55,7 +54,7 @@ class BallDetection(object):
             # Draw Circles
             if circles is not None:
                 for x, y, r in circles[0, :]:
-                    if TEST:
+                    if self._test:
                         if r < 30:
                             cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
                             cv2.circle(frame, (x, y), 1, (0, 255, 0), 5)
@@ -73,7 +72,7 @@ class BallDetection(object):
             # put your GPIO line here
 
             # Show the result in frames
-            if TEST:
+            if self._test:
                 cv2.imshow('HueComp', hthresh)
                 cv2.imshow('SatComp', sthresh)
                 cv2.imshow('ValComp', vthresh)
