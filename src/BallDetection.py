@@ -1,5 +1,6 @@
 import cv2
 import numpy
+import math
 from Calibre import Calibre
 
 
@@ -27,8 +28,12 @@ class BallDetection(object):
         self.vmx = 255
 
     def start(self):
+        x_coefficient = 0.25
+        y_coefficient = 0.25
         while True:
             ret, frame = self.cap.read()
+            height, width, channels = frame.shape
+            x_reference, y_reference = width/2, height
 
             # # converting to HSV
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -54,22 +59,28 @@ class BallDetection(object):
             # Draw Circles
             if circles is not None:
                 for x, y, r in circles[0, :]:
+                    xD = x - x_reference
+                    yD = y - y_reference
+                    xD *= x_coefficient
+                    yD *= y_coefficient
+                    radian = math.atan(xD / yD)
+                    degree = float(radian * 180 / math.pi)
+                    if degree < 0:
+                        degree += 360
+                    distance = math.sqrt(math.pow(x, 2) + math.pow(y, 2))
+                    print("Degree:", degree, "Distance:", distance)
+
                     if self._test:
                         if r < 30:
-                            cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
-                            cv2.circle(frame, (x, y), 1, (0, 255, 0), 5)
+                                cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
+                                cv2.circle(frame, (x, y), 1, (0, 255, 0), 5)
                         elif r > 35:
-                            cv2.circle(frame, (x, y), r, (0, 255, 255), 2)
-                            cv2.circle(frame, (x, y), 1, (0, 255, 255), 5)
-                    else:
-                        if r:
-                            # Remove print and send x, y, r to raspberry ;)
-                            print("X: {}, Y: {}, R: {}".format(x, y, r))
-
-            # you can use the 'buzz' variable as a trigger to switch some GPIO lines on Rpi :)
-            # print buzz
-            # if buzz:
-            # put your GPIO line here
+                                cv2.circle(frame, (x, y), r, (0, 255, 255), 2)
+                                cv2.circle(frame, (x, y), 1, (0, 255, 255), 5)
+                        else:
+                            if r:
+                                # Remove print and send x, y, r to MicroController ;)
+                                print("X: {}, Y: {}, R: {}".format(x, y, r))
 
             # Show the result in frames
             if self._test:
