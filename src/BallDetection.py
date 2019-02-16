@@ -3,6 +3,8 @@ import numpy
 import math
 from Calibre import Calibre
 
+from SerialCommand import SerialCommand
+
 
 class BallDetection(object):
     def __init__(self, test=False):
@@ -38,7 +40,7 @@ class BallDetection(object):
     def start(self):
         x_coefficient = 1.0
         y_coefficient = 1.0
-
+        serial_command = SerialCommand()
         while True:
             ret, frame = self.cap.read()
             frame = cv2.flip(frame, 1)
@@ -102,6 +104,7 @@ class BallDetection(object):
                                 cv2.circle(frame, (x, y), 1, (0, 255, 255), 5)
                         else:
                             # Remove print and send x, y, r to MicroController ;)
+                            serial_command.send("X: {}, Y: {}, R: {}, Degree: {}, Distance: {}".format(x, y, r, degree, distance))
                             print("X: {}, Y: {}, R: {}, Degree: {}, Distance: {}".format(x, y, r, degree, distance))
 
             # Show the result in frames
